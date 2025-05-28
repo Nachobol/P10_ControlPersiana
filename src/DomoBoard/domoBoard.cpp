@@ -28,7 +28,13 @@ DomoBoard::DomoBoard()
 
 	pinMode(RELE_P, OUTPUT);
 	pinMode(TRIAC_P, OUTPUT);
+	// Configura el pin PER_ONOFF_P como salida digital.
+	// Este pin se usará para activar o desactivar la persiana (alimentación o relé principal).
 	pinMode(PER_ONOFF_P, OUTPUT);
+
+	// Configura el pin PER_UPDOWN_P como salida digital.
+	// Este pin se usará para definir la dirección de movimiento de la persiana:
+	// por ejemplo, HIGH para subir, LOW para bajar (según la lógica del hardware).
 	pinMode(PER_UPDOWN_P, OUTPUT);
 
 	BOTON1.pin 			= BUTTON1_P;
@@ -98,11 +104,16 @@ DomoBoard::DomoBoard()
 	TRIAC.pin 			= TRIAC_P;
 	TRIAC.estado 		= LOW;
 
-	PER_ONOFF.pin		= PER_ONOFF_P;
-	PER_ONOFF.estado	= LOW;
+	// Asigna al objeto PER_ONOFF el pin físico que controla el encendido/apagado de la persiana
+	PER_ONOFF.pin = PER_ONOFF_P;
+	// Inicializa el estado de PER_ONOFF en LOW (apagado o inactivo)
+	PER_ONOFF.estado = LOW;
 
-	PER_UPDOWN.pin		= PER_UPDOWN_P;
-	PER_UPDOWN.estado	= LOW;
+	// Asigna al objeto PER_UPDOWN el pin físico que controla la dirección de la persiana (subir o bajar)
+	PER_UPDOWN.pin = PER_UPDOWN_P;
+	// Inicializa el estado de PER_UPDOWN en LOW (por ejemplo, bajando o dirección neutra, según el hardware)
+	PER_UPDOWN.estado = LOW;
+
 
 	listSensors.push(&BOTON1);
 	listSensors.push(&BOTON2);

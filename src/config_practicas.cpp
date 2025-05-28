@@ -221,19 +221,24 @@ void Config_P9_SRC_Interruptor(void){
 	mbDomoboard.BTN_OPT.mbActuators.push(&(mbDomoboard.RELE));
 }
 
-void Config_P10_CtrlPersiana(){
-	//Borramos los actuadores previos asignado a cada sensor de entrada
+void Config_P10_CtrlPersiana() {
+	// Borramos cualquier configuración previa de sensores y actuadores del sistema
+	// para evitar que queden asociaciones antiguas de otras prácticas
 	mbDomoboard.Clear_SensorsConfiguration();
 
+	// Configuración inicial del controlador de la persiana
+	ctrlPosPer.activa = false;  // Al iniciar, la persiana no está en movimiento
+	ctrlPosPer.maxTime = (uint16_t *)&persianaTiempoSubida;  // Tiempo máximo que tarda en subir completamente
+	ctrlPosPer.actTime = 0;  // Se resetea el tiempo actual (posición inicial 0%)
 
-	ctrlPosPer.activa		= false;
-	ctrlPosPer.maxTime		= (uint16_t *)&persianaTiempoSubida;
-	ctrlPosPer.actTime		= 0;
-
+	// Asociamos el evento Persiana al BOTON1 (sensor de subida)
 	mbDomoboard.BOTON1.mbSensorEvent = Persiana;
+	// Cuando se active BOTON1, controlará el actuador PERUP (subida de persiana)
 	mbDomoboard.BOTON1.mbActuators.push(&(mbDomoboard.PERUP));
 
+	// Asociamos el evento Persiana al BOTON2 (sensor de bajada)
 	mbDomoboard.BOTON2.mbSensorEvent = Persiana;
+	// Cuando se active BOTON2, controlará el actuador PERDOWN (bajada de persiana)
 	mbDomoboard.BOTON2.mbActuators.push(&(mbDomoboard.PERDOWN));
 }
 

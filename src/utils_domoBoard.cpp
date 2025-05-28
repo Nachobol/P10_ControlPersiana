@@ -306,36 +306,39 @@ void	trigger_Level(void *Sensor){
 /*============================================*/
 
 
-void Ctrl_PosicionPersiana(TPCtrlTime ctrlPosPer, tsStaPer staPer){
-	static tsStaPer lastStePer = PER_STOP;
+// Controla la posición de la persiana en función del estado (subiendo, bajando, parada, etc.)
+void Ctrl_PosicionPersiana(TPCtrlTime ctrlPosPer, tsStaPer staPer) {
+	static tsStaPer lastStePer = PER_STOP;  // Guarda el último estado para saber si se estaba subiendo o bajando
 
-	// lambda function
-	auto actualizeTime = [&](int8_t sign){
+	// Función lambda que actualiza el tiempo de movimiento y el porcentaje de apertura de la persiana
+	auto actualizeTime = [&](int8_t sign) {
+		// Actualiza el tiempo activo sumando o restando según la dirección (1=sube, -1=baja)
+		ctrlPosPer->actTime = ctrlPosPer->actTime + sign * (millis() - ctrlPosPer->lastAct);
 
-		ctrlPosPer->actTime = ctrlPosPer->actTime + sign*(millis() - ctrlPosPer->lastAct);
-
-		if(ctrlPosPer->actTime < 0){
+		// Asegura que el tiempo activo esté entre 0 y el máximo permitido
+		if (ctrlPosPer->actTime < 0) {
 			ctrlPosPer->actTime = 0;
-		}else if(uint16_t(ctrlPosPer->actTime) > *ctrlPosPer->maxTime){
+		} else if (uint16_t(ctrlPosPer->actTime) > *ctrlPosPer->maxTime) {
 			ctrlPosPer->actTime = *ctrlPosPer->maxTime;
 		}
 
-		uint8_t per = PERCENTAGE((ctrlPosPer->actTime)*100/(*ctrlPosPer->maxTime));
+		// Calcula el porcentaje actual de apertura de la persiana
+		uint8_t per = PERCENTAGE((ctrlPosPer->actTime) * 100 / (*ctrlPosPer->maxTime));
+		uint8_t per2 = V_PERCENTAGE(ctrlPosPer);  // Alternativa (no se usa directamente aquí)
 
-		uint8_t per2 = V_PERCENTAGE(ctrlPosPer);
-
-		//DEBUGLOGLN("POS PER: %d - %d", per, per2);
-
-		if(per != Iregs[MB_POSPER]){
+		// Si ha cambiado el porcentaje, actualiza el registro ModBus correspondiente
+		if (per != Iregs[MB_POSPER]) {
 			Iregs[MB_POSPER] = per;
 		}
 	};
 
-	switch(staPer){
-	case PER_STOP:
-	case PER_STOP2:
+	// Según el nuevo estado de la persiana, se realiza una acción
+	switch (staPer) {
+	case PER_STOP:  // Se ha detenido
+	case PER_STOP2: // Se ha detenido pero tras un cambio de dirección
 		ctrlPosPer->activa = false;
-		switch(lastStePer){
+		// Según el último estado activo, se actualiza el tiempo (último movimiento)
+		switch (lastStePer) {
 		case PER_DOWN:
 			actualizeTime(-1);
 			break;
@@ -347,107 +350,95 @@ void Ctrl_PosicionPersiana(TPCtrlTime ctrlPosPer, tsStaPer staPer){
 		}
 		break;
 
-	case PER_DOWN:
-		if(ctrlPosPer->activa){
-			//Continúa bajado
-			actualizeTime(-1);
-		}else{
-			//Comienza a bajada
-			ctrlPosPer->activa = true;
+	case PER_DOWN:  // Bajando
+		if (ctrlPosPer->activa) {
+			actualizeTime(-1);  // Sigue bajando
+		} else {
+			ctrlPosPer->activa = true;  // Comienza a bajar
 		}
-		ctrlPosPer->lastAct = millis();
+		ctrlPosPer->lastAct = millis();  // Actualiza el timestamp
 		break;
 
-	case PER_UP:
-		if(ctrlPosPer->activa){
-			//Continúa subiendo
-			actualizeTime(1);
-		}else{
-			//Comienza a subir
-			ctrlPosPer->activa = true;
+	case PER_UP:  // Subiendo
+		if (ctrlPosPer->activa) {
+			actualizeTime(1);  // Sigue subiendo
+		} else {
+			ctrlPosPer->activa = true;  // Comienza a subir
 		}
-		ctrlPosPer->lastAct = millis();
+		ctrlPosPer->lastAct = millis();  // Actualiza el timestamp
 		break;
 	}
 
-	lastStePer = staPer;
+	lastStePer = staPer;  // Guarda el nuevo estado como último
 }
 
-void update_PersianaState(){
-	//Actualiza posición Persiana
-	Ctrl_PosicionPersiana(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER]&0xFF));
-
-	mbDomoboard.SetPersiana(tsStaPer(Aregs[MB_STAPER]&0xFF));
+// Actualiza el estado de la persiana en función del valor almacenado en el registro ModBus
+void update_PersianaState() {
+	Ctrl_PosicionPersiana(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Aplica el estado actual
+	mbDomoboard.SetPersiana(tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Llama a una función para reflejar el cambio
 }
+// Determina si la persiana debe subir, bajar o detenerse según entradas físicas (botones u otros sensores)
+void UpDown_Persiana() {
+	bool UpP, DownP;
+	tsStaPer state = (tsStaPer)(Aregs[MB_STAPER] & 0xFF);  // Estado actual
 
-void UpDown_Persiana(){
-	bool UpP,DownP;
-	tsStaPer state = (tsStaPer)(Aregs[MB_STAPER]&0xFF);
-
+	// Lee los registros ModBus que representan botones físicos o señales
 	UpP = (bool)(*mbDomoboard.PERUP.mbReg);
 	DownP = (bool)(*mbDomoboard.PERDOWN.mbReg);
 
-    switch(state){
-    	case PER_STOP: //Parada
-    		if (UpP == ON) {
-    			state = PER_UP; //Subiendo
-    		}
+	switch (state) {
+	case PER_STOP:
+		if (UpP == ON) {
+			state = PER_UP;
+		}
+		if (DownP == ON) {
+			state = PER_DOWN;
+		}
+		break;
 
-    		if (DownP == ON) {
-    			state = PER_DOWN; //Bajando
-    		}
+	case PER_UP:
+		if (!UpP && !DownP) {
+			state = PER_STOP;
+		}
+		if (!UpP && DownP) {
+			state = PER_STOP2;  // Cambio de dirección posible
+		}
+		break;
 
-    		break;
+	case PER_DOWN:
+		if (!UpP && !DownP) {
+			state = PER_STOP;
+		}
+		if (UpP && !DownP) {
+			state = PER_STOP2;
+		}
+		break;
 
-    	case PER_UP: //Subiendo
-    		if(!UpP && !DownP) {
-    			state = PER_STOP;
-    		}
+	case PER_STOP2:
+		if (!UpP && !DownP) {
+			state = PER_STOP;
+		}
+		break;
+	}
 
-    		if(!UpP && DownP){
-    			state = PER_STOP2;
-    		}
-    		break;
-
-    	case PER_DOWN: //Bajando
-    		if(!UpP && !DownP) {
-    			state = PER_STOP;
-    		}
-
-    		if(UpP && !DownP){
-    			state = PER_STOP2;
-    		}
-    		break;
-
-    	case PER_STOP2:
-    		if(!UpP && !DownP) {
-    			state = PER_STOP;
-    		}
-    		break;
-
-    }
-
-    if(Aregs[MB_STAPER] != state){
-    	//mbDomoboard.set_holdingRegister(MB_STAPER, state);
-    	Aregs[MB_STAPER] = state;
-
-    	update_PersianaState();
-    }
+	// Si el estado ha cambiado, actualiza el registro y ejecuta la actualización
+	if (Aregs[MB_STAPER] != state) {
+		Aregs[MB_STAPER] = state;
+		update_PersianaState();
+	}
 }
-
-void Persiana(void *Sensor){
-
+// Función principal que ejecuta la lógica de la persiana asociada a un sensor
+void Persiana(void *Sensor) {
 	TpmbSensor sensor = reinterpret_cast<TpmbSensor>(Sensor);
 
-	//Se asigna un estado al actuador, en función del estado del sensor
-	for(int n = 0; n < sensor->mbActuators.count(); n++){
+	// Activa los actuadores si el valor del sensor es distinto del valor por defecto
+	for (int n = 0; n < sensor->mbActuators.count(); n++) {
 		*(sensor->mbActuators.peek(n))->mbReg = (sensor->Sensor->valor != sensor->Sensor->valor_Df);
 	}
 
+	// Llama a la función que decide si subir, bajar o parar según estado
 	UpDown_Persiana();
 }
-
-
 
 
 

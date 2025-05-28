@@ -96,10 +96,13 @@ void Init_RTU_Modbus()
 
 			case MB_PERUP:
 			case MB_PERDOWN:
-				if((uint8_t) (Aregs[MB_SELPRACT] & 0xFF) == P10_PER)
-					UpDown_Persiana();
-				break;
-			}
+			// Si se ha escrito en alguno de los registros MB_PERUP o MB_PERDOWN
+			// (botón virtual de subir o bajar la persiana desde Modbus),
+			// se verifica si la práctica seleccionada actualmente es la P10 (práctica de persiana).
+			if ((uint8_t)(Aregs[MB_SELPRACT] & 0xFF) == P10_PER)
+				UpDown_Persiana();  // Ejecuta la lógica de subida/bajada/parada según el nuevo estado de los botones
+			break;
+					}
 	}
 
 }
@@ -147,7 +150,10 @@ void Init_RTU_Modbus()
 				break;
 
 			case MB_STAPER:
-
+			// Si se detecta una escritura en el registro MB_STAPER (registro de estado de la persiana),
+			// se llama a la función que actualiza la lógica de control de la persiana.
+			// Esto se ejecuta, por ejemplo, cuando desde el SCADA o interfaz Modbus
+			// se cambia el estado de la persiana manualmente (subir, bajar, parar).
 				update_PersianaState();
 
 				break;

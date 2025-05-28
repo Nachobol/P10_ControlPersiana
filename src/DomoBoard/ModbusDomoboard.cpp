@@ -93,12 +93,20 @@ ModbusDomoboard::ModbusDomoboard():DomoBoard() {
 	TRIAC.actuator 	= &(DomoBoard::TRIAC);
 	TRIAC.mbReg 	= &Cregs[MB_TRIAC];
 
-	//Configuración Estado Persiana
-	PERUP.mbReg 		= &Cregs[MB_PERUP];
-	Cregs[MB_PERUP] 	= OFF;
+	// Configuración del estado inicial de los actuadores de la persiana
 
-	PERDOWN.mbReg 		= &Cregs[MB_PERDOWN];
-	Cregs[MB_PERDOWN] 	= OFF;
+	// Asociamos el puntero del actuador PERUP (subir persiana) al registro de control MB_PERUP.
+	// De esta forma, el sistema sabrá qué registro ModBus consultar para saber si debe subir la persiana.
+	PERUP.mbReg = &Cregs[MB_PERUP];
+	// Inicializamos el valor del registro MB_PERUP en OFF (estado inactivo)
+	Cregs[MB_PERUP] = OFF;
+
+	// Asociamos el puntero del actuador PERDOWN (bajar persiana) al registro de control MB_PERDOWN.
+	// Esto permite al sistema controlar la bajada de la persiana leyendo/escribiendo ese registro.
+	PERDOWN.mbReg = &Cregs[MB_PERDOWN];
+	// Inicializamos el valor del registro MB_PERDOWN en OFF (estado inactivo)
+	Cregs[MB_PERDOWN] = OFF;
+
 }
 
 void ModbusDomoboard::leerAllSensor(void){
