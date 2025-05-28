@@ -164,23 +164,31 @@ void  DomoBoard::leerSensor(ptsSensor Sensor){
 	}
 }
 
-void 	DomoBoard::SetPersiana(tsStaPer staPer)
+// Función miembro de la clase DomoBoard que controla el estado físico de la persiana
+// en función del estado lógico `staPer` recibido (subiendo, bajando, parada, etc.)
+void DomoBoard::SetPersiana(tsStaPer staPer)
 {
-	switch(staPer){
+	switch(staPer) {
 	case PER_STOP:
 	case PER_STOP2:
-		setActuator(&PER_ONOFF, false);
-		setActuator(&PER_UPDOWN, false);
+		// En ambos casos de parada (normal o tras cambio de dirección),
+		// se apaga el motor (PER_ONOFF) y se deja la dirección en estado neutro (PER_UPDOWN).
+		setActuator(&PER_ONOFF, false);   // Desactiva la persiana (corta la alimentación o desactiva el relé)
+		setActuator(&PER_UPDOWN, false);  // Dirección en estado bajo (por seguridad o neutralidad)
 		break;
 
 	case PER_DOWN:
-		setActuator(&PER_UPDOWN, false);
-		setActuator(&PER_ONOFF, true);
+		// Para bajar la persiana:
+		// Establece la dirección de bajada (LOW) y activa el motor.
+		setActuator(&PER_UPDOWN, false);  // Dirección de bajada
+		setActuator(&PER_ONOFF, true);    // Activa el motor
 		break;
 
 	case PER_UP:
-		setActuator(&PER_UPDOWN, true);
-		setActuator(&PER_ONOFF, true);
+		// Para subir la persiana:
+		// Establece la dirección de subida (HIGH) y activa el motor.
+		setActuator(&PER_UPDOWN, true);   // Dirección de subida
+		setActuator(&PER_ONOFF, true);    // Activa el motor
 		break;
 	}
 }
