@@ -242,6 +242,24 @@ void Config_P10_CtrlPersiana() {
 	mbDomoboard.BOTON2.mbActuators.push(&(mbDomoboard.PERDOWN));
 }
 
+void Config_P11_Garaje(){
+	// Borramos cualquier configuración previa de sensores y actuadores del sistema
+	// para evitar que queden asociaciones antiguas de otras prácticas
+	mbDomoboard.Clear_SensorsConfiguration();
+
+	// Configuración inicial del controlador de la persiana
+	ctrlPosPer.activa = false;  // Al iniciar, la persiana no está en movimiento
+	ctrlPosPer.maxTime = (uint16_t *)&persianaTiempoSubida;  // Tiempo máximo que tarda en subir completamente
+	ctrlPosPer.actTime = 0;  // Se resetea el tiempo actual (posición inicial 0%)
+
+	// Asociamos el evento Persiana al BOTON1 (sensor de subida)
+	mbDomoboard.BOTON1.mbSensorEvent = Garaje;
+
+	// Cuando se active BOTON1, controlará el actuador PERUP (subida de persiana)
+	mbDomoboard.BOTON1.mbActuators.push(&(mbDomoboard.PERUP));
+
+}
+
 void SelectionConfiguration(uint8_t selConf){
 	static uint8_t actConf = 0x00;
 	bool PSelect = false;

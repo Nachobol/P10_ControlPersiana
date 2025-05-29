@@ -46,6 +46,7 @@ typedef struct
 #define P7_PIR					    0x70
 #define P9_ALL						0x90
 #define P10_PER						0xA1
+#define P11_GARAGE					0xA2
 
 /****************************************************************************/
 /***        				Exported Functions                            ***/

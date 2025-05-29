@@ -372,10 +372,78 @@ void Ctrl_PosicionPersiana(TPCtrlTime ctrlPosPer, tsStaPer staPer) {
 	lastStePer = staPer;  // Guarda el nuevo estado como último
 }
 
+// Controla la posición de la persiana en función del estado (subiendo, bajando, parada, etc.)
+void Ctrl_PosicionGaraje(TPCtrlTime ctrlPosPer, tsStaPer staPer) {
+	static tsStaPer lastStePer = PER_STOP;  // Guarda el último estado para saber si se estaba subiendo o bajando
+
+	// Función lambda que actualiza el tiempo de movimiento y el porcentaje de apertura de la persiana
+	auto actualizeTime = [&](int8_t sign) {
+		// Actualiza el tiempo activo sumando o restando según la dirección (1=sube, -1=baja)
+		ctrlPosPer->actTime = ctrlPosPer->actTime + sign * (millis() - ctrlPosPer->lastAct);
+
+		// Asegura que el tiempo activo esté entre 0 y el máximo permitido
+		if (ctrlPosPer->actTime < 0) {
+			ctrlPosPer->actTime = 0;
+		} else if (uint16_t(ctrlPosPer->actTime) > *ctrlPosPer->maxTime) {
+			ctrlPosPer->actTime = *ctrlPosPer->maxTime;
+		}
+
+		// Calcula el porcentaje actual de apertura de la persiana
+		uint8_t per = PERCENTAGE((ctrlPosPer->actTime) * 100 / (*ctrlPosPer->maxTime));
+		uint8_t per2 = V_PERCENTAGE(ctrlPosPer);  // Alternativa (no se usa directamente aquí)
+
+		// Si ha cambiado el porcentaje, actualiza el registro ModBus correspondiente
+		if (per != Iregs[MB_POSPER]) {
+			Iregs[MB_POSPER] = per;
+		}
+	};
+
+	switch (staPer) {
+		case PER_STOP:  // Se ha detenido
+		case PER_STOP2: // Se ha detenido pero tras un cambio de dirección //activar garaje  o fototransistor
+		ctrlPosPer->activa = false;
+		// Según el último estado activo, se actualiza el tiempo (último movimiento)
+				switch (lastStePer) {
+				case PER_DOWN:
+					actualizeTime(-1);
+					break;
+				case PER_UP:
+					actualizeTime(1);
+					break;
+				default:
+					break;
+		}
+		case PER_DOWN:  // Bajando
+		if (ctrlPosPer->activa) {
+			actualizeTime(-1);  // Sigue bajando
+		} else {
+			ctrlPosPer->activa = true;  // Comienza a bajar
+		}
+		ctrlPosPer->lastAct = millis();  // Actualiza el timestamp
+		break;
+		case PER_UP:  // Subiendo
+		if (ctrlPosPer->activa) {
+			actualizeTime(1);  // Sigue subiendo
+		} else {
+			ctrlPosPer->activa = true;  // Comienza a subir
+		}
+		ctrlPosPer->lastAct = millis();  // Actualiza el timestamp
+		break;
+	}
+
+	lastStePer = staPer;  // Guarda el nuevo estado como último
+}
+
 // Actualiza el estado de la persiana en función del valor almacenado en el registro ModBus
 void update_PersianaState() {
 	Ctrl_PosicionPersiana(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Aplica el estado actual
 	mbDomoboard.SetPersiana(tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Llama a una función para reflejar el cambio
+}
+
+void update_garajeState() {
+	Ctrl_PosicionGaraje(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Aplica el estado actual
+	mbDomoboard.SetPersiana(tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Llama a una función para reflejar el cambio
+	
 }
 // Determina si la persiana debe subir, bajar o detenerse según entradas físicas (botones u otros sensores)
 void UpDown_Persiana() {
@@ -387,35 +455,47 @@ void UpDown_Persiana() {
 	DownP = (bool)(*mbDomoboard.PERDOWN.mbReg);
 
 	switch (state) {
+	
 	case PER_STOP:
+		// Si la persiana está parada actualmente...
 		if (UpP == ON) {
+			// Si se pulsa el botón de subir, cambia el estado a PER_UP (subiendo)
 			state = PER_UP;
 		}
 		if (DownP == ON) {
+			// Si se pulsa el botón de bajar, cambia el estado a PER_DOWN (bajando)
 			state = PER_DOWN;
 		}
 		break;
 
 	case PER_UP:
+		// Si la persiana está subiendo actualmente...
 		if (!UpP && !DownP) {
+			// Si se suelta el botón de subida y tampoco se pulsa el de bajada, se detiene la persiana
 			state = PER_STOP;
 		}
 		if (!UpP && DownP) {
-			state = PER_STOP2;  // Cambio de dirección posible
+			// Si se suelta el de subir y se pulsa el de bajar, se cambia a PER_STOP2 (transición antes de invertir dirección)
+			state = PER_STOP2;
 		}
 		break;
 
 	case PER_DOWN:
+		// Si la persiana está bajando actualmente...
 		if (!UpP && !DownP) {
+			// Si se sueltan ambos botones, se detiene
 			state = PER_STOP;
 		}
 		if (UpP && !DownP) {
+			// Si se pulsa el de subir mientras baja, cambia a PER_STOP2 (preparando cambio de dirección)
 			state = PER_STOP2;
 		}
 		break;
 
 	case PER_STOP2:
+		// Estado intermedio usado para permitir inversión de dirección tras detenerse
 		if (!UpP && !DownP) {
+			// Si no se pulsa ningún botón tras el estado intermedio, vuelve al estado de parada normal
 			state = PER_STOP;
 		}
 		break;
@@ -426,6 +506,59 @@ void UpDown_Persiana() {
 		Aregs[MB_STAPER] = state;
 		update_PersianaState();
 	}
+}
+
+void UpDown_Garaje() {
+	bool UpP, DownP;
+	tsStaPer state = (tsStaPer)(Aregs[MB_STAPER] & 0xFF);  // Estado actual
+	
+	// Lee los registros ModBus que representan botones físicos o señales
+	UpP = (bool)(*mbDomoboard.PERUP.mbReg);
+	DownP = (bool)(*mbDomoboard.PERDOWN.mbReg);
+
+	switch (state) {
+	
+	case PER_STOP:
+		// Si la persiana está parada actualmente...
+		if (UpP == ON) {
+			// Si se pulsa el botón de subir, cambia el estado a PER_UP (subiendo)
+			state = PER_UP;
+			break;
+		}
+
+	case PER_UP:
+		// Si la persiana está subiendo actualmente...
+		//que siga subiendo
+		break;
+
+	case PER_DOWN:
+		// Si la persiana está bajando actualmente...
+
+		if (UpP && !DownP) {
+			// Si se pulsa el de subir mientras baja, cambia a PER_STOP2 (preparando cambio de dirección)
+			state = PER_STOP2;
+		}
+		//hay que añadir que si el fototransistor detecta luz, se detenga la persiana 
+		//manda al perstop 2 alli espera un 1 sec y sube
+		break;
+	
+		case PER_STOP2:
+		// Estado intermedio usado para permitir inversión de dirección tras detenerse
+		//espera un segundo y manda al estado de subir
+		if (!UpP && !DownP) {
+			// Si no se pulsa ningún botón tras el estado intermedio, vuelve al estado de parada normal
+			state = PER_STOP;
+		}
+		break;
+	}
+
+	if (Aregs[MB_STAPER] != state) {
+		Aregs[MB_STAPER] = state;
+		update_garajeState();
+	}
+	
+
+
 }
 // Función principal que ejecuta la lógica de la persiana asociada a un sensor
 void Persiana(void *Sensor) {
@@ -438,6 +571,18 @@ void Persiana(void *Sensor) {
 
 	// Llama a la función que decide si subir, bajar o parar según estado
 	UpDown_Persiana();
+}
+
+void Garaje(void *Sensor) {
+	TpmbSensor sensor = reinterpret_cast<TpmbSensor>(Sensor);
+
+	// Activa los actuadores si el valor del sensor es distinto del valor por defecto
+	for (int n = 0; n < sensor->mbActuators.count(); n++) {
+		*(sensor->mbActuators.peek(n))->mbReg = (sensor->Sensor->valor != sensor->Sensor->valor_Df);
+	}
+
+	// Llama a la función que decide si subir, bajar o parar según estado
+	UpDown_Garaje();
 }
 
 

@@ -116,6 +116,7 @@ public:
 	void 			leerAllSensor(void);
 	void 			leerSensor(ptsSensor Sensor);
 	void 			SetPersiana(tsStaPer staPer);
+	void            SetGaraje(tsStaPer staPer);
 
 	virtual void 	Clear_SensorsConfiguration();
 

@@ -193,6 +193,38 @@ void DomoBoard::SetPersiana(tsStaPer staPer)
 	}
 }
 
+void DomoBoard::SetGaraje(tsStaPer staPer)
+{
+	switch(staPer) {
+	case PER_STOP:
+		//activo timer de 5 segundos y luego bajo
+		setActuator(&PER_ONOFF, false);   // Desactiva la persiana (corta la alimentación o desactiva el relé)
+		//activo cronometro de 5 segundos y luego sigo
+		setActuator(&PER_ONOFF, true);   // Desactiva la persiana (corta la alimentación o desactiva el relé)
+	case PER_STOP2:
+		// En ambos casos de parada (normal o tras cambio de dirección),
+		// se apaga el motor (PER_ONOFF) y se deja la dirección en estado neutro (PER_UPDOWN).
+		setActuator(&PER_ONOFF, false);   // Desactiva la persiana (corta la alimentación o desactiva el relé)
+		setActuator(&PER_UPDOWN, false);  // Dirección en estado bajo (por seguridad o neutralidad)
+		//activo cronometro de 1 y luego sigo	
+		break;
+
+	case PER_DOWN:
+		// Para bajar la persiana:
+		// Establece la dirección de bajada (LOW) y activa el motor.
+		setActuator(&PER_UPDOWN, false);  // Dirección de bajada
+		setActuator(&PER_ONOFF, true);    // Activa el motor
+		break;
+
+	case PER_UP:
+		// Para subir la persiana:
+		// Establece la dirección de subida (HIGH) y activa el motor.
+		setActuator(&PER_UPDOWN, true);   // Dirección de subida
+		setActuator(&PER_ONOFF, true);    // Activa el motor
+		break;
+	}
+}
+
 void  DomoBoard::setActuator(tpsActuator Actuator, bool val){
 	if(Actuator->estado != val){
 		digitalWrite(Actuator->pin, val);

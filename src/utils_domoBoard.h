@@ -49,9 +49,13 @@ void Calc_Temperatura(void *Sensor);
 void interruptor_SRC(void *Sensor);
 void trigger_Level(void *Sensor);
 void Persiana(void *Sensor);
+void Garaje(void *Sensor);
 void Ctrl_PosicionPersiana(TPCtrlTime ctrlPosPer, tsStaPer staPer);
+void Ctrl_PosicionGaraje(TPCtrlTime ctrlPosPer, tsStaPer staPer);
 void UpDown_Persiana();
+void UpDown_Garaje();
 void update_PersianaState();
+void update_garajeState();
 
 /****************************************************************************/
 /***        				Exported Variables                            ***/

@@ -154,7 +154,8 @@ void Init_RTU_Modbus()
 			// se llama a la función que actualiza la lógica de control de la persiana.
 			// Esto se ejecuta, por ejemplo, cuando desde el SCADA o interfaz Modbus
 			// se cambia el estado de la persiana manualmente (subir, bajar, parar).
-				update_PersianaState();
+				update_garajeState();
+				
 
 				break;
 		}
