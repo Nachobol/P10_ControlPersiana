@@ -106,7 +106,8 @@ ModbusDomoboard::ModbusDomoboard():DomoBoard() {
 	PERDOWN.mbReg = &Cregs[MB_PERDOWN];
 	// Inicializamos el valor del registro MB_PERDOWN en OFF (estado inactivo)
 	Cregs[MB_PERDOWN] = OFF;
-
+	Aregs[MB_TMP1_GARAJE] 		= 0x01;						//Configuración inicial 1 Segundos activo
+	Aregs[MB_TMP5_GARAJE] 		= 0x05;						//Configuración inicial 5 Segundos activo
 }
 
 void ModbusDomoboard::leerAllSensor(void){

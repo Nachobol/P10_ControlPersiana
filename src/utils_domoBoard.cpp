@@ -169,26 +169,44 @@ void mbConmutador(void *mbSensor)
  *
  */
 
- void	mbInterruptorTemporizado(void *Sensor){
+// Función que gestiona un interruptor digital temporizado.
+// Se activa cuando el sensor cambia su valor respecto al valor por defecto,
+// y tras un tiempo sin cambios, apaga el actuador.
 
-	TpmbSensor sensor = reinterpret_cast<TpmbSensor>(Sensor);
+void mbInterruptorTemporizado(void *Sensor) {
+    
+    // Reinterpreta el puntero genérico como un puntero del tipo TpmbSensor,
+    // que contiene información del sensor, el actuador asociado y el temporizador.
+    TpmbSensor sensor = reinterpret_cast<TpmbSensor>(Sensor);
 
-	if(sensor->Sensor->valor_Df != sensor->Sensor->valor){
-		sensor->asyncWait->restart();
+    // Verifica si el valor actual del sensor es diferente al valor por defecto,
+    // lo que indica un cambio o activación del sensor.
+    if (sensor->Sensor->valor_Df != sensor->Sensor->valor) {
+        
+        // Reinicia el temporizador asíncrono al detectar el cambio.
+        sensor->asyncWait->restart();
 
-		mbDomoboard.manager_mbActuators(&(sensor->mbActuators), (TStateDigitalDev)ON);
+        // Activa el actuador correspondiente (por ejemplo, encender una luz o un motor).
+        mbDomoboard.manager_mbActuators(&(sensor->mbActuators), (TStateDigitalDev)ON);
 
-	}else{
-		if(!sensor->asyncWait->isWaiting() && !sensor->asyncWait->isVerified()){
+    } else {
+        // Si no hay cambio en el valor del sensor (sigue en su estado por defecto)...
 
-			DEBUGLNF("ASYNWAIT TERMINADO");
+        // ...y además el temporizador ha terminado y aún no se ha verificado la acción final:
+        if (!sensor->asyncWait->isWaiting() && !sensor->asyncWait->isVerified()) {
 
-			sensor->asyncWait->setVerified();
-			mbDomoboard.manager_mbActuators(&(sensor->mbActuators), (TStateDigitalDev)OFF);
-		}
-	}
+            // Muestra un mensaje de depuración indicando que el temporizador ha concluido.
+            DEBUGLNF("ASYNWAIT TERMINADO");
 
+            // Marca el temporizador como verificado para evitar repetir esta acción.
+            sensor->asyncWait->setVerified();
+
+            // Desactiva el actuador (por ejemplo, apaga la luz).
+            mbDomoboard.manager_mbActuators(&(sensor->mbActuators), (TStateDigitalDev)OFF);
+        }
+    }
 }
+
 
 /*==============================================*/
 /*		      Calcular Temperatura              */
@@ -442,7 +460,7 @@ void update_PersianaState() {
 
 void update_garajeState() {
 	Ctrl_PosicionGaraje(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Aplica el estado actual
-	mbDomoboard.SetPersiana(tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Llama a una función para reflejar el cambio
+	mbDomoboard.SetGaraje(tsStaPer(Aregs[MB_STAPER] & 0xFF));  // Llama a una función para reflejar el cambio
 	
 }
 // Determina si la persiana debe subir, bajar o detenerse según entradas físicas (botones u otros sensores)
@@ -539,12 +557,14 @@ void UpDown_Garaje() {
 			state = PER_STOP2;
 		}
 		//hay que añadir que si el fototransistor detecta luz, se detenga la persiana 
-		//manda al perstop 2 alli espera un 1 sec y sube
+		if(//sensor de fototransistor)
+			mbDomoboard.PHOTOTTOR.Sensor->valor > mbDomoboard.PHOTOTTOR.Sensor->valor_Df){
+			state = PER_STOP2;
+		}
 		break;
 	
 		case PER_STOP2:
 		// Estado intermedio usado para permitir inversión de dirección tras detenerse
-		//espera un segundo y manda al estado de subir
 		if (!UpP && !DownP) {
 			// Si no se pulsa ningún botón tras el estado intermedio, vuelve al estado de parada normal
 			state = PER_STOP;

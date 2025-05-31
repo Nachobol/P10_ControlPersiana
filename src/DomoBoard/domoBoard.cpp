@@ -15,6 +15,8 @@
 /****************************************************************************/
 #include "domoBoard.h"
 #include "debuglog.h"
+#include "ModbusDomoboard.h"
+
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -195,17 +197,22 @@ void DomoBoard::SetPersiana(tsStaPer staPer)
 
 void DomoBoard::SetGaraje(tsStaPer staPer)
 {
+	static AsyncWait asyncWait;
 	switch(staPer) {
 	case PER_STOP:
+	
 		//activo timer de 5 segundos y luego bajo
 		setActuator(&PER_ONOFF, false);   // Desactiva la persiana (corta la alimentación o desactiva el relé)
+		asyncWait.startWaiting(&Aregs[MB_TMP5_GARAJE]);		//Configuramos el tiempo de espera al tiempo almacenado
 		//activo cronometro de 5 segundos y luego sigo
 		setActuator(&PER_ONOFF, true);   // Desactiva la persiana (corta la alimentación o desactiva el relé)
 	case PER_STOP2:
+	
 		// En ambos casos de parada (normal o tras cambio de dirección),
 		// se apaga el motor (PER_ONOFF) y se deja la dirección en estado neutro (PER_UPDOWN).
 		setActuator(&PER_ONOFF, false);   // Desactiva la persiana (corta la alimentación o desactiva el relé)
 		setActuator(&PER_UPDOWN, false);  // Dirección en estado bajo (por seguridad o neutralidad)
+		asyncWait.startWaiting(&Aregs[MB_TMP1_GARAJE]);		//Configuramos el tiempo de espera al tiempo almacenado
 		//activo cronometro de 1 y luego sigo	
 		break;
 

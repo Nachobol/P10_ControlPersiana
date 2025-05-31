@@ -33,6 +33,11 @@
 #define	ADDR_ACTPIR			1		//Activa/Desactiva PIR
 #define ADDR_TIEMPO_PIR_1	2		//Tiempo PIR Activo 1
 #define ADDR_TIEMPO_PIR_2	3		//Tiempo PIR Activo 2
+#define ADDR_TMP1_GARAJE	12		//Tiempo PIR Garaje 1
+#define ADDR_TMP12_GARAJE	13		//Tiempo PIR Garaje 1
+#define ADDR_TMP5_GARAJE	14		//Tiempo PIR Garaje 2
+#define ADDR_TMP52_GARAJE	15		//Tiempo PIR Garaje 2
+
 #define ADDR_ACTSRC			4		//Activa/desactiva SRC (Photorresistencia)
 #define	ADDR_SRC_HL_1		5		//Nivel Alto Activación SRC
 #define	ADDR_SRC_HL_2		6		//Nivel Alto Activación SRC

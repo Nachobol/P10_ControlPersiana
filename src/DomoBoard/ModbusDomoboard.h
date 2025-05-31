@@ -47,6 +47,8 @@ enum {
 enum{
 	MB_SELPRACT,		// Registro ModBus Para seleccionar la configuración del sistema
 	MB_TMP_PIR,			// Registro para controlar el tiempo activo del sensor PIR (Segundos)
+	MB_TMP1_GARAJE,	// Registro para controlar el tiempo activo del sensor PIR
+	MB_TMP5_GARAJE,	// Registro para controlar el tiempo activo del sensor PIR
 	MB_SRC_HL,			// Registro para controlar el nivel superior de activación SRC
 	MB_SRC_LL,			// Registro para controlar el nivel Inferior de activación SRC
 	MB_TTOR_LL,			// Registro para controlar el nivel Inferior de activación del PHOTOTTOR

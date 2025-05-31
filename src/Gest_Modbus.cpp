@@ -129,9 +129,37 @@ void Init_RTU_Modbus()
 				EEPROM.update(ADDR_TIEMPO_PIR_1, (Aregs[MB_TMP_PIR]>>8)&0xFF);
 				EEPROM.update(ADDR_TIEMPO_PIR_2, (Aregs[MB_TMP_PIR]&0xFF));
 				break;
+			
+			case MB_TMP1_GARAJE:
+   				 // Almacenar el tiempo de activación del sensor PIR (en milisegundos)
+				// en la EEPROM en formato Big Endian para conservarlo tras apagados/reinicios.
+
+				// Guarda el byte más significativo (bits 15-8) del registro Aregs[MB_TMP1_GARAGE]
+				// en la dirección ADDR_TIEMPO_PIR_1 de la EEPROM.
+				EEPROM.update(ADDR_TMP1_GARAJE, (Aregs[MB_TMP1_GARAJE] >> 8) & 0xFF);
+
+				// Guarda el byte menos significativo (bits 7-0) del registro Aregs[MB_TMP1_GARAGE]
+				// en la dirección ADDR_TIEMPO_PIR_2 de la EEPROM.
+				EEPROM.update(ADDR_TMP12_GARAJE, (Aregs[MB_TMP1_GARAJE] & 0xFF));
+
+				break; 
+			
+			case MB_TMP5_GARAJE:
+				// Almacenar el tiempo de activación del sensor PIR (en milisegundos)
+				// en la EEPROM en formato Big Endian para conservarlo tras apagados/reinicios.
+
+				// Guarda el byte más significativo (bits 15-8) del registro Aregs[MB_TMP5_GARAGE]
+				// en la dirección ADDR_TIEMPO_PIR_1 de la EEPROM.
+				EEPROM.update(ADDR_TMP5_GARAJE, (Aregs[MB_TMP5_GARAJE] >> 8) & 0xFF);
+
+				// Guarda el byte menos significativo (bits 7-0) del registro Aregs[MB_TMP5_GARAGE]
+				// en la dirección ADDR_TIEMPO_PIR_2 de la EEPROM.
+				EEPROM.update(ADDR_TMP52_GARAJE, (Aregs[MB_TMP5_GARAJE] & 0xFF));
+
+				break; 
 
 			
-				case MB_SRC_HL:
+			case MB_SRC_HL:
 				//Almacenar nivel superior de activación SRC (Big Endian)
 				EEPROM.update(ADDR_SRC_HL_1, (Aregs[MB_SRC_HL] >> 8) & 0xFF);
 				EEPROM.update(ADDR_SRC_HL_2, (Aregs[MB_SRC_HL] & 0xFF));
@@ -193,6 +221,8 @@ void load_Config(){
 
 	//Leer Tiempo activación PIR
 	Aregs[MB_TMP_PIR] = ((EEPROM.read(ADDR_TIEMPO_PIR_1)&0xFF) << 8) + (EEPROM.read(ADDR_TIEMPO_PIR_2)&0xFF) ;
+	Aregs[MB_TMP1_GARAJE] = ((EEPROM.read(ADDR_TMP1_GARAJE)&0xFF) << 8) + (EEPROM.read(ADDR_TMP12_GARAJE)&0xFF);
+	Aregs[MB_TMP5_GARAJE] = ((EEPROM.read(ADDR_TMP5_GARAJE)&0xFF) << 8) + (EEPROM.read(ADDR_TMP52_GARAJE)&0xFF);
 
 	//DEBUGLOGLN("Tiempo Activación del PIR: %d Segundos", Aregs[MB_TMP_PIR]);
 

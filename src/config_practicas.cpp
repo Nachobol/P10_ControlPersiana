@@ -247,6 +247,9 @@ void Config_P11_Garaje(){
 	// para evitar que queden asociaciones antiguas de otras prácticas
 	mbDomoboard.Clear_SensorsConfiguration();
 
+	
+	
+
 	// Configuración inicial del controlador de la persiana
 	ctrlPosPer.activa = false;  // Al iniciar, la persiana no está en movimiento
 	ctrlPosPer.maxTime = (uint16_t *)&persianaTiempoSubida;  // Tiempo máximo que tarda en subir completamente
