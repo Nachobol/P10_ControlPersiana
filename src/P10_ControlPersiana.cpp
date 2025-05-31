@@ -64,7 +64,7 @@ void loop() {
 
 		main_loop();
 
-		Ctrl_PosicionPersiana(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER]&0xFF));
+		Ctrl_PosicionGaraje(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER]&0xFF));
 
 		LOOP_x1s{
 			mbDomoboard.leerSensor(&mbDomoboard.TEMPSEN);

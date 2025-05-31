@@ -206,6 +206,7 @@ void DomoBoard::SetGaraje(tsStaPer staPer)
 		asyncWait.startWaiting(&Aregs[MB_TMP5_GARAJE]);		//Configuramos el tiempo de espera al tiempo almacenado
 		//activo cronometro de 5 segundos y luego sigo
 		setActuator(&PER_ONOFF, true);   // Desactiva la persiana (corta la alimentación o desactiva el relé)
+		break;
 	case PER_STOP2:
 	
 		// En ambos casos de parada (normal o tras cambio de dirección),

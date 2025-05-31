@@ -100,7 +100,7 @@ void Init_RTU_Modbus()
 			// (botón virtual de subir o bajar la persiana desde Modbus),
 			// se verifica si la práctica seleccionada actualmente es la P10 (práctica de persiana).
 			if ((uint8_t)(Aregs[MB_SELPRACT] & 0xFF) == P10_PER)
-				UpDown_Persiana();  // Ejecuta la lógica de subida/bajada/parada según el nuevo estado de los botones
+				UpDown_Garaje();  // Ejecuta la lógica de subida/bajada/parada según el nuevo estado de los botones
 			break;
 					}
 	}

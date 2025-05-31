@@ -48,6 +48,7 @@ void mbInterruptorTemporizado(void *Sensor);
 void Calc_Temperatura(void *Sensor);
 void interruptor_SRC(void *Sensor);
 void trigger_Level(void *Sensor);
+void trigger_Level_garaje(void *Sensor);
 void Persiana(void *Sensor);
 void Garaje(void *Sensor);
 void Ctrl_PosicionPersiana(TPCtrlTime ctrlPosPer, tsStaPer staPer);

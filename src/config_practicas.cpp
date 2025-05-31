@@ -205,9 +205,7 @@ void Config_P9_SRC_Interruptor(void){
 	mbDomoboard.PHOTORES.mbSensorEvent = interruptor_SRC;
 	mbDomoboard.PHOTORES.mbActuators.push(&(mbDomoboard.TRIAC));
 
-	//Config PhotoTtor
-	mbDomoboard.PHOTOTTOR.ctrlLevelPtr.lInf = &(Aregs[MB_TTOR_LL]);
-	//mbDomoboard.PHOTOTTOR.Aux = 0;
+	
 	mbDomoboard.PHOTOTTOR.mbSensorEvent = trigger_Level;
 	mbDomoboard.PHOTOTTOR.mbActuators.push(&(mbDomoboard.RELE));
 
@@ -260,6 +258,13 @@ void Config_P11_Garaje(){
 
 	// Cuando se active BOTON1, controlará el actuador PERUP (subida de persiana)
 	mbDomoboard.BOTON1.mbActuators.push(&(mbDomoboard.PERUP));
+
+	//static uint16_t umbralMinimoPHOTOTTOR = 200;
+
+	// Configuración del sensor PHOTOTTOR
+	//mbDomoboard.PHOTOTTOR.ctrlLevelPtr.lInf = &umbralMinimoPHOTOTTOR; // ← Umbral hardcoded
+	//mbDomoboard.PHOTOTTOR.Aux = 0;
+	//mbDomoboard.PHOTOTTOR.mbSensorEvent = trigger_Level_garaje;
 
 }
 

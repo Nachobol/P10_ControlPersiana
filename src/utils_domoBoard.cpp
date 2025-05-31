@@ -305,17 +305,42 @@ void	interruptor_SRC(void *Sensor){
  * tRIGGER por nivel de luminosidad. Dispara un evento cuando el nivel del sensor
  * se encuentra por debajo de un determinado nivel
  */
-void	trigger_Level(void *Sensor){
-	TpmbSensor sensor = reinterpret_cast<TpmbSensor>(Sensor);
+// Función que evalúa si el valor de un sensor ha bajado por debajo de un umbral inferior.
+// Si es así, activa el actuador correspondiente (una sola vez), y evita reactivarlo
+// hasta que el valor vuelva a subir por encima del umbral.
 
-	uint16_t limInfe = *(sensor->ctrlLevelPtr.lInf);
+void trigger_Level(void *Sensor) {
 
-	if(((uint16_t) sensor->Sensor->valor <= limInfe)){
-		if(sensor->Sensor->Aux == 0){
-			mbDomoboard.manager_mbActuators(&(sensor->mbActuators), (TStateDigitalDev)ON);
-			sensor->Sensor->Aux = 1;
-		}
-	} else sensor->Sensor->Aux = 0;
+    // Se convierte el puntero genérico recibido a un puntero de tipo TpmbSensor,
+    // que contiene información del sensor, su configuración y su actuador.
+    TpmbSensor sensor = reinterpret_cast<TpmbSensor>(Sensor);
+
+    // Se obtiene el valor del límite inferior desde el puntero lInf
+    // que forma parte de la estructura ctrlLevelPtr.
+    // Este límite se utiliza como umbral mínimo para decidir si se debe actuar.
+    uint16_t limInfe = *(sensor->ctrlLevelPtr.lInf);
+
+    // Se evalúa si el valor actual del sensor es menor o igual que el límite inferior.
+    if (((uint16_t) sensor->Sensor->valor <= limInfe)) {
+
+        // Si el sensor está por debajo del límite, se verifica si aún no se ha actuado.
+        // Esto se controla con el campo Aux, que funciona como una bandera de activación.
+        if (sensor->Sensor->Aux == 0) {
+
+            // Si no se ha actuado todavía, se activa el actuador asociado al sensor.
+            // Por ejemplo, encender una bomba, una luz de aviso, una alarma, etc.
+            mbDomoboard.manager_mbActuators(&(sensor->mbActuators), (TStateDigitalDev)ON);
+
+            // Se establece Aux = 1 para evitar que el actuador se vuelva a activar
+            // en cada ejecución de esta función mientras el valor siga por debajo del límite.
+            sensor->Sensor->Aux = 1;
+        }
+
+    } else {
+        // Si el valor del sensor ya NO está por debajo del límite inferior,
+        // se reinicia la bandera Aux a 0 para permitir una futura activación.
+        sensor->Sensor->Aux = 0;
+    }
 }
 /*============================================*/
 
@@ -323,6 +348,37 @@ void	trigger_Level(void *Sensor){
 /*			    CONTROL DE PERSIANA           */
 /*============================================*/
 
+void trigger_Level_garaje(void *Sensor) {
+
+    // Se convierte el puntero genérico recibido a un puntero de tipo TpmbSensor,
+    // que contiene información del sensor, su configuración y su actuador.
+    TpmbSensor sensor = reinterpret_cast<TpmbSensor>(Sensor);
+
+    // Se obtiene el valor del límite inferior desde el puntero lInf
+    // que forma parte de la estructura ctrlLevelPtr.
+    // Este límite se utiliza como umbral mínimo para decidir si se debe actuar.
+    uint16_t limInfe = *(sensor->ctrlLevelPtr.lInf);
+
+    // Se evalúa si el valor actual del sensor es menor o igual que el límite inferior.
+    if (((uint16_t) sensor->Sensor->valor <= limInfe)) {
+
+        // Si el sensor está por debajo del límite, se verifica si aún no se ha actuado.
+        // Esto se controla con el campo Aux, que funciona como una bandera de activación.
+        if (sensor->Sensor->Aux == 0) {
+
+            mbDomoboard.SetGaraje(PER_STOP2);
+
+            // Se establece Aux = 1 para evitar que el actuador se vuelva a activar
+            // en cada ejecución de esta función mientras el valor siga por debajo del límite.
+            sensor->Sensor->Aux = 1;
+        }
+
+    } else {
+        // Si el valor del sensor ya NO está por debajo del límite inferior,
+        // se reinicia la bandera Aux a 0 para permitir una futura activación.
+        sensor->Sensor->Aux = 0;
+    }
+}
 
 // Controla la posición de la persiana en función del estado (subiendo, bajando, parada, etc.)
 void Ctrl_PosicionPersiana(TPCtrlTime ctrlPosPer, tsStaPer staPer) {
@@ -533,7 +589,9 @@ void UpDown_Garaje() {
 	// Lee los registros ModBus que representan botones físicos o señales
 	UpP = (bool)(*mbDomoboard.PERUP.mbReg);
 	DownP = (bool)(*mbDomoboard.PERDOWN.mbReg);
+	static uint16_t umbralMinimoPHOTOTTOR = 200;
 
+	// Configuración del sensor PHOTOTTOR
 	switch (state) {
 	
 	case PER_STOP:
@@ -557,8 +615,8 @@ void UpDown_Garaje() {
 			state = PER_STOP2;
 		}
 		//hay que añadir que si el fototransistor detecta luz, se detenga la persiana 
-		if(//sensor de fototransistor)
-			mbDomoboard.PHOTOTTOR.Sensor->valor > mbDomoboard.PHOTOTTOR.Sensor->valor_Df){
+		if(mbDomoboard.PHOTOTTOR.ctrlLevelPtr.lInf < &umbralMinimoPHOTOTTOR){
+			
 			state = PER_STOP2;
 		}
 		break;
