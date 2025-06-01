@@ -528,7 +528,21 @@ void Ctrl_PosicionGaraje(TPCtrlTime ctrlPosPer, tsStaPer staPer)
 
 	switch (staPer)
 	{
-	case PER_STOP:	// Se ha detenido
+	case PER_STOP:
+		ctrlPosPer->activa = false;
+		// Según el último estado activo, se actualiza el tiempo (último movimiento)
+		switch (lastStePer)
+		{
+		case PER_DOWN:
+			actualizeTime(-1);
+			break;
+		case PER_UP:
+			actualizeTime(1);
+			break;
+		default:
+			break;
+		}
+		break;		// Se ha detenido
 	case PER_STOP2: // Se ha detenido pero tras un cambio de dirección //activar garaje  o fototransistor
 		ctrlPosPer->activa = false;
 		// Según el último estado activo, se actualiza el tiempo (último movimiento)
@@ -664,7 +678,7 @@ void UpDown_Garaje()
 	UpP = (bool)(*mbDomoboard.PERUP.mbReg);
 	DownP = (bool)(*mbDomoboard.PERDOWN.mbReg);
 	static uint16_t umbralMinimoPHOTOTTOR = 200;
-	
+
 	// Configuración del sensor PHOTOTTOR
 	switch (state)
 	{
@@ -680,8 +694,7 @@ void UpDown_Garaje()
 		if (!mbDomoboard.garajeWait.isWaiting() && !mbDomoboard.garajeWait.isVerified())
 		{
 			mbDomoboard.garajeWait.setVerified(); // Marcamos que ya hicimos esta acción
-			mbDomoboard.SetGaraje(PER_DOWN);	 // Después de 5s, baja automáticamente
-			state = PER_DOWN;		 // Actualizamos el estado
+			state = PER_DOWN;					  // Actualizamos el estado
 		}
 		break;
 
@@ -713,12 +726,12 @@ void UpDown_Garaje()
 
 			if (UpP)
 			{
-				mbDomoboard.SetGaraje(PER_UP); // Si el usuario quiere subir
+
 				state = PER_UP;
 			}
 			else if (DownP)
 			{
-				mbDomoboard.SetGaraje(PER_DOWN); // Si el usuario quiere bajar
+
 				state = PER_DOWN;
 			}
 			else
