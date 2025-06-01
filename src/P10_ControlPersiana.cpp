@@ -63,9 +63,9 @@ void loop() {
 		UPDATELOOP();
 
 		main_loop();
-
+		UpDown_Garaje();  // ← Esta línea es esencial para que funcione tu lógica del garaje
 		Ctrl_PosicionGaraje(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER]&0xFF));
-
+		
 		LOOP_x1s{
 			mbDomoboard.leerSensor(&mbDomoboard.TEMPSEN);
 		}
