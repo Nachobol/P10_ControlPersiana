@@ -699,12 +699,18 @@ void UpDown_Garaje()
 		break;
 
 	case PER_UP:
-		// Si la persiana está subiendo actualmente...
-		// que siga subiendo
+		if (Iregs[MB_POSPER] >= 100)
+		{
+			state = PER_STOP; // Se detiene si ya está completamente abierta
+		}
+
 		break;
 
 	case PER_DOWN:
-		// Si la persiana está bajando actualmente...
+		if (Iregs[MB_POSPER] <= 0)
+		{
+			state = PER_STOP; // Se detiene si ya está completamente cerrada
+		}
 
 		if (UpP && !DownP)
 		{
@@ -722,24 +728,13 @@ void UpDown_Garaje()
 	case PER_STOP2:
 		if (!mbDomoboard.garajeWait.isWaiting() && !mbDomoboard.garajeWait.isVerified())
 		{
-			mbDomoboard.garajeWait.setVerified(); // Marcamos que ya actuamos
+			mbDomoboard.garajeWait.setVerified(); // Espera completada, marcamos como realizada
 
-			if (UpP)
-			{
+			state = PER_UP; // Siempre sube después de PER_STOP2, sea cual sea el trigger
 
-				state = PER_UP;
-			}
-			else if (DownP)
-			{
-
-				state = PER_DOWN;
-			}
-			else
-			{
-				state = PER_STOP; // Si no hay pulsación, queda parado
-			}
 			break;
 		}
+		break;
 	}
 
 	if (Aregs[MB_STAPER] != state)
