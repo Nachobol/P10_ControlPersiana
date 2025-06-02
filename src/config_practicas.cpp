@@ -252,13 +252,12 @@ void Config_P11_Garaje(){
 	ctrlPosPer.activa = false;  // Al iniciar, la persiana no está en movimiento
 	ctrlPosPer.maxTime = (uint16_t *)&persianaTiempoSubida;  // Tiempo máximo que tarda en subir completamente
 	ctrlPosPer.actTime = 0;  // Se resetea el tiempo actual (posición inicial 0%)
-
 	// Asociamos el evento Persiana al BOTON1 (sensor de subida)
 	mbDomoboard.BOTON1.mbSensorEvent = Garaje;
 
 	// Cuando se active BOTON1, controlará el actuador PERUP (subida de persiana)
 	mbDomoboard.BOTON1.mbActuators.push(&(mbDomoboard.PERUP));
-
+	
 	//static uint16_t umbralMinimoPHOTOTTOR = 200;
 
 	// Configuración del sensor PHOTOTTOR

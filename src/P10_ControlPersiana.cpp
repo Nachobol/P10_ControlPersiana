@@ -45,17 +45,17 @@ void setup() {
 
     //Iniciamos Modbus en Modo RTU
 	Init_RTU_Modbus();
-
+	
 	//Leer Configuración actual
+	
 	load_Config();
-
 	//Registramos la lectura de sensores
     epdRegisterLoop(leerSensors);
-
+	
 	//Registramos comprobación comunicaciones ModBus
 	epdRegisterLoop(RTU_ModBus);
 
-    DEBUGLNF("P10 Control Persiana - Solución");
+   
 }
 
 void loop() {
@@ -65,7 +65,6 @@ void loop() {
 		main_loop();
 		UpDown_Garaje();  // ← Esta línea es esencial para que funcione tu lógica del garaje
 		Ctrl_PosicionGaraje(&ctrlPosPer, tsStaPer(Aregs[MB_STAPER]&0xFF));
-		
 		LOOP_x1s{
 			mbDomoboard.leerSensor(&mbDomoboard.TEMPSEN);
 		}

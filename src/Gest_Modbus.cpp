@@ -99,7 +99,7 @@ void Init_RTU_Modbus()
 			// Si se ha escrito en alguno de los registros MB_PERUP o MB_PERDOWN
 			// (botón virtual de subir o bajar la persiana desde Modbus),
 			// se verifica si la práctica seleccionada actualmente es la P10 (práctica de persiana).
-			if ((uint8_t)(Aregs[MB_SELPRACT] & 0xFF) == P10_PER)
+			if ((uint8_t)(Aregs[P11_GARAGE] & 0xFF) == P11_GARAGE)
 				UpDown_Garaje();  // Ejecuta la lógica de subida/bajada/parada según el nuevo estado de los botones
 			break;
 					}
@@ -207,7 +207,7 @@ void load_Config(){
 	//Leemos configuración Actual "Selección Práctica"
 	Aregs[MB_SELPRACT] = EEPROM.read(ADDR_SELPRACT);	//Read EEPROM
 
-	Aregs[MB_SELPRACT] = (Aregs[MB_SELPRACT] == 0xFF) ? 0x11 : Aregs[MB_SELPRACT];	//Seleccionamos la práctica 1 apartado 1 por defecto
+	Aregs[MB_SELPRACT] = (Aregs[MB_SELPRACT] == 0xFF) ? 0xA2 : Aregs[MB_SELPRACT];	//Seleccionamos la práctica 1 apartado 1 por defecto
 
 	SelectionConfiguration((uint8_t) (Aregs[MB_SELPRACT] & 0xFF));
 

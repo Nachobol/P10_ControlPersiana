@@ -677,7 +677,7 @@ void UpDown_Garaje()
 	// Lee los registros ModBus que representan botones físicos o señales
 	UpP = (bool)(*mbDomoboard.PERUP.mbReg);
 	DownP = (bool)(*mbDomoboard.PERDOWN.mbReg);
-	static uint16_t umbralMinimoPHOTOTTOR = 200;
+	static uint16_t umbralMinimoPHOTOTTOR = 10;
 
 	// Configuración del sensor PHOTOTTOR
 	switch (state)
@@ -696,20 +696,24 @@ void UpDown_Garaje()
 			mbDomoboard.garajeWait.setVerified(); // Marcamos que ya hicimos esta acción
 			state = PER_DOWN;					  // Actualizamos el estado
 		}
+		
 		break;
 
 	case PER_UP:
 		if (Iregs[MB_POSPER] >= 100)
 		{
 			state = PER_STOP; // Se detiene si ya está completamente abierta
-		}
-
+			
+		} 
+		
+		
 		break;
 
 	case PER_DOWN:
 		if (Iregs[MB_POSPER] <= 0)
 		{
 			state = PER_STOP; // Se detiene si ya está completamente cerrada
+			
 		}
 
 		if (UpP && !DownP)
@@ -734,6 +738,7 @@ void UpDown_Garaje()
 
 			break;
 		}
+		
 		break;
 	}
 
@@ -742,6 +747,7 @@ void UpDown_Garaje()
 		Aregs[MB_STAPER] = state;
 		update_garajeState();
 	}
+	
 }
 // Función principal que ejecuta la lógica de la persiana asociada a un sensor
 void Persiana(void *Sensor)
